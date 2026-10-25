@@ -1,0 +1,13 @@
+{
+  "content_folder": "/content",
+  "rules": ["em_dash", "table_pipe", "missing_section", "table_lead_in"],
+  "required_sections": {
+    "article": [
+      "Common Mistakes",
+      "Try It Yourself",
+      "Why This Matters for an FDE",
+      "Comprehension Check"
+    ],
+    "lab": ["Problem Statement", "Requirements", "Grading Rubric"]
+  }
+}

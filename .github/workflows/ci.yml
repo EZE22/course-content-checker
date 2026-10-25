@@ -37,3 +37,31 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - run: pytest
+
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build the test image
+        run: docker build --target test -t content-checker:test .
+      - name: Run the tests in the test image
+        run: docker run --rm content-checker:test
+      - name: Build the runtime image
+        run: docker build --target runtime -t content-checker:ci .
+      - name: Smoke test the runtime image
+        run: |
+          code=0
+          docker run --rm \
+            -v "$PWD/tests/fixtures:/content:ro" \
+            -v "$PWD/docker/settings.json:/config/settings.json:ro" \
+            -v ci-data:/data \
+            content-checker:ci || code=$?
+          echo "Exit code: $code"
+          if [ "$code" -ne 1 ]; then
+            echo "Expected exit code 1 because the fixtures contain violations." >&2
+            exit 1
+          fi

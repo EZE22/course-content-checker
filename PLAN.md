@@ -105,6 +105,17 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 6. The workflow file is validated with actionlint before it is committed.
 7. A pull request is merged only when both jobs are green. The first four branches were merged before CI existed, on local green pytest and ruff.
 
+### Docker
+
+1. The Dockerfile uses python:3.12-slim and has a shared base stage, then a test stage, then a runtime stage. Runtime is the last stage, so it is the default.
+2. The runtime stage installs the package with pip install (not editable), runs as a non-root user named checker, and uses content-checker as the entry point, with check /config/settings.json as the default command.
+3. The test stage adds the tests folder and the dev extra, and its default command is pytest.
+4. The content folder is mounted read-only at /content. The settings file is mounted read-only at /config/settings.json, and its content_folder is /content.
+5. History lives in a named Docker volume mounted at /data. The image sets CHECKER_DB to /data/history.db.
+6. A .dockerignore keeps the virtual environment, .git, .github, caches, egg-info, and any database file out of the build.
+7. The docker-build CI job builds the test stage and runs the tests inside it, then builds the runtime image.
+8. The example container settings file is docker/settings.json.
+
 ### Release 1.1.0 rule
 
 The fifth rule is heading_skip. It flags a heading that jumps more than one level deeper than the heading before it. The first heading is never flagged, going back up is fine, and fenced code blocks are skipped. It applies to articles and labs. It needs no schema change.
