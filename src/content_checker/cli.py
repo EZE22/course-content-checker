@@ -7,6 +7,7 @@ import sqlite3
 import sys
 from contextlib import closing
 
+from content_checker.backup import BackupError, backup_database, restore_database
 from content_checker.loader import collect_files
 from content_checker.report import format_report
 from content_checker.rules import RULE_REGISTRY
@@ -20,7 +21,7 @@ PACKAGE_NAME = "course-content-checker"
 
 
 class _UsageError(Exception):
-    """A usage problem found by argparse. Carries the message to print."""
+    """A usage or environment problem. Carries the message to print."""
 
 
 class _Parser(argparse.ArgumentParser):
@@ -33,10 +34,27 @@ class _Parser(argparse.ArgumentParser):
 
 def _build_parser():
     parser = _Parser(prog="content-checker")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"content-checker {importlib.metadata.version(PACKAGE_NAME)}",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True, parser_class=_Parser)
     check = subparsers.add_parser("check", help="check the content folder")
     check.add_argument("settings_path", nargs="?", default=DEFAULT_SETTINGS)
+    backup = subparsers.add_parser("backup", help="copy the history database to a new file")
+    backup.add_argument("destination")
+    restore = subparsers.add_parser("restore", help="replace the history database from a backup")
+    restore.add_argument("backup_file")
     return parser
+
+
+def _require_db_path():
+    """Return the history database path from CHECKER_DB, or raise if unset or empty."""
+    db_path = os.environ.get(DB_ENV_VAR)
+    if not db_path:
+        raise _UsageError(f"The environment variable {DB_ENV_VAR} is not set")
+    return db_path
 
 
 def _fail(message):
@@ -52,9 +70,10 @@ def _check(settings_path):
     except SettingsError as error:
         return _fail(error)
 
-    db_path = os.environ.get(DB_ENV_VAR)
-    if not db_path:
-        return _fail(f"The environment variable {DB_ENV_VAR} is not set")
+    try:
+        db_path = _require_db_path()
+    except _UsageError as error:
+        return _fail(error)
 
     source_files = collect_files(settings.content_folder)
     findings = run_rules(source_files, build_rules(settings))
@@ -76,6 +95,30 @@ def _check(settings_path):
     return 0
 
 
+def _backup(destination):
+    """Run the backup command and return its exit code."""
+    try:
+        db_path = _require_db_path()
+        backup_database(db_path, destination)
+    except (_UsageError, BackupError) as error:
+        return _fail(error)
+    print(f"Backup saved: {destination}")
+    print("Integrity check: ok")
+    return 0
+
+
+def _restore(backup_file):
+    """Run the restore command and return its exit code."""
+    try:
+        db_path = _require_db_path()
+        restore_database(backup_file, db_path)
+    except (_UsageError, BackupError) as error:
+        return _fail(error)
+    print(f"Restored: {db_path}")
+    print("Integrity check: ok")
+    return 0
+
+
 def main(argv=None):
     """Run the command line and return the exit code. Never raises SystemExit."""
     try:
@@ -85,4 +128,8 @@ def main(argv=None):
     except SystemExit as error:
         return error.code if isinstance(error.code, int) else 0
 
+    if args.command == "backup":
+        return _backup(args.destination)
+    if args.command == "restore":
+        return _restore(args.backup_file)
     return _check(args.settings_path)
