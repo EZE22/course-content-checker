@@ -2,6 +2,7 @@ import os
 import stat
 
 import pytest
+
 from content_checker.loader import SourceFile, collect_files, detect_kind
 
 # Case 1: the name test.

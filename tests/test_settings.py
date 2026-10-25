@@ -2,6 +2,7 @@ import json
 import re
 
 import pytest
+
 from content_checker.settings import Settings, SettingsError, load_settings
 
 KNOWN_RULES = ["em_dash", "table_pipe", "missing_section", "table_lead_in"]
