@@ -21,6 +21,7 @@ The settings file is JSON with three keys: content_folder (a path string), rules
 2. content_folder resolves relative to the settings file, not the current directory.
 3. The settings path is a command line argument, with settings.json in the current directory as the default.
 4. These problems exit with code 2 and a message naming the key involved: file missing, invalid JSON, a missing key, a wrong value type, an unknown rule name, or a content folder that does not exist.
+5. The loader receives the known rule names as an argument, so it does not import the rules module. The command line passes the registry names in.
 
 ### File kind
 
