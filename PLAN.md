@@ -61,6 +61,7 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 3. If CHECKER_DB is not set, the checker stops with exit code 2 and a clear message. There is no default location.
 4. The parent folder of the database is created if it does not exist.
 5. Settings and environment problems are checked before any file is read.
+6. An empty CHECKER_DB is treated the same as an unset one.
 
 ### Rule design
 
@@ -87,6 +88,12 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 5. Rejected files are listed in their own block after the findings, each with its reason.
 6. A summary line is always printed last, with files checked, findings, and rejected files.
 7. The report goes to stdout. Settings and usage errors go to stderr.
+8. Rejected files are listed after the findings under the line "Rejected files:", one line per file in the form "path: reason", sorted by path. The block is left out when no file was rejected.
+9. The summary line reads "Checked N files, F findings, R rejected." where N counts every .md file found, including rejected ones. The words stay plural.
+10. Findings are sorted by path, then line, then rule name.
+11. Settings and usage errors print one line to stderr in the form "Error: message" and exit with code 2. A missing or unknown subcommand is a usage error.
+12. The order of work is: load settings, check CHECKER_DB, read files, run rules, save the run, print the report. Settings are checked before CHECKER_DB, so when both are wrong the settings message is shown. Rules run only on readable files, in the order the settings list them. If saving fails, the report is still printed, then "Error: message" goes to stderr and the exit code is 2.
+13. The checker version saved with each run comes from the installed package metadata, so the version number lives only in pyproject.toml.
 
 ### Release 1.1.0 rule
 
