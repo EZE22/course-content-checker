@@ -95,6 +95,16 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 12. The order of work is: load settings, check CHECKER_DB, read files, run rules, save the run, print the report. Settings are checked before CHECKER_DB, so when both are wrong the settings message is shown. Rules run only on readable files, in the order the settings list them. If saving fails, the report is still printed, then "Error: message" goes to stderr and the exit code is 2.
 13. The checker version saved with each run comes from the installed package metadata, so the version number lives only in pyproject.toml.
 
+### Continuous integration
+
+1. The workflow file is .github/workflows/ci.yml. It runs on every pull request and on every push to main.
+2. It has two jobs for now, ruff and pytest. The docker-build job is added in feature/docker.
+3. Jobs run on ubuntu-latest with Python 3.12 and install the package with pip install -e ".[dev]".
+4. The versions of pytest and ruff are pinned in pyproject.toml under the dev extra, so local runs and CI use the same tools.
+5. The workflow grants only read access to the repository contents, and each job has a timeout.
+6. The workflow file is validated with actionlint before it is committed.
+7. A pull request is merged only when both jobs are green. The first four branches were merged before CI existed, on local green pytest and ruff.
+
 ### Release 1.1.0 rule
 
 The fifth rule is heading_skip. It flags a heading that jumps more than one level deeper than the heading before it. The first heading is never flagged, going back up is fine, and fenced code blocks are skipped. It applies to articles and labs. It needs no schema change.
