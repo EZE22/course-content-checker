@@ -2,6 +2,7 @@ import dataclasses
 from pathlib import Path
 
 import pytest
+
 from content_checker.rules import (
     RULE_REGISTRY,
     EmDashRule,
