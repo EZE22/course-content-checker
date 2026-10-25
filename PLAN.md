@@ -31,6 +31,7 @@ A file is a lab if either test matches. Otherwise it is an article.
 2. Heading test: the first heading starts with "Lab" followed by a space, a colon, or a digit, ignoring case.
 3. The first heading is the first line that starts with one or more # characters and a space, ignoring fenced code blocks.
 4. Only .md files are read. Other files are skipped without a finding.
+5. A file that cannot be read is kept with kind unreadable and a reason that names the cause, such as UTF-8 for undecodable bytes or the operating system message for permission errors.
 
 ### Database
 
