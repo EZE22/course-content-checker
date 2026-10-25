@@ -116,6 +116,22 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 7. The docker-build CI job builds the test stage and runs the tests inside it, then builds the runtime image.
 8. The example container settings file is docker/settings.json.
 
+### Release 1.0.0, backup, and restore
+
+1. The version number lives only in pyproject.toml. Release 1.0.0 sets it to 1.0.0.
+2. content-checker --version prints "content-checker 1.0.0" to stdout and exits 0. The number comes from the installed package metadata.
+3. content-checker backup DESTINATION copies the history database to DESTINATION with sqlite3 Connection.backup. The source is opened read-only, so backup can never create or change the history database. Backup works while no check is running.
+4. The destination must not already exist, and its parent folder is created if needed. Backup never overwrites a file.
+5. After copying, backup runs PRAGMA integrity_check on the copy. The copy is kept only if the result is ok. Otherwise the incomplete copy is removed and the command fails.
+6. content-checker restore BACKUP_FILE replaces the history database from a backup file. The backup is verified first: integrity_check returns ok, user_version is 1, and the runs, files, and findings tables exist.
+7. Restore copies the verified backup to a temporary file next to the history database, verifies that copy, then swaps it into place with os.replace. If a history database already exists, it is first copied aside next to it with the suffix .before-restore.
+8. backup and restore read the database path from CHECKER_DB, with the same rules as check: unset or empty is an error.
+9. backup prints "Backup saved: DESTINATION" and then "Integrity check: ok". restore prints "Restored: DB_PATH" and then "Integrity check: ok".
+10. Success exits 0. Any failure prints "Error: message" to stderr, exits 2, and leaves the history database as it was.
+11. The release is a CHANGELOG.md entry, a v1.0.0 tag on main after the merge, and a Docker image tagged 1.0.0 built from that commit.
+12. If the .before-restore file already exists, restore fails with an error and changes nothing, so an earlier safety copy is never overwritten.
+13. Any sqlite3 error while copying or verifying is reported as a BackupError whose message includes the path and SQLite's own error text.
+
 ### Release 1.1.0 rule
 
 The fifth rule is heading_skip. It flags a heading that jumps more than one level deeper than the heading before it. The first heading is never flagged, going back up is fine, and fenced code blocks are skipped. It applies to articles and labs. It needs no schema change.
