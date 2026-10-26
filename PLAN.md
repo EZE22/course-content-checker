@@ -109,7 +109,7 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 
 1. The Dockerfile uses python:3.12-slim and has a shared base stage, then a test stage, then a runtime stage. Runtime is the last stage, so it is the default.
 2. The runtime stage installs the package with pip install (not editable), runs as a non-root user named checker, and uses content-checker as the entry point, with check /config/settings.json as the default command.
-3. The test stage adds the tests folder and the dev extra, and its default command is pytest.
+3. The test stage adds the tests folder, the examples folder, and the dev extra, and its default command is pytest.
 4. The content folder is mounted read-only at /content. The settings file is mounted read-only at /config/settings.json, and its content_folder is /content.
 5. History lives in a named Docker volume mounted at /data. The image sets CHECKER_DB to /data/history.db.
 6. A .dockerignore keeps the virtual environment, .git, .github, caches, egg-info, and any database file out of the build.
@@ -131,6 +131,13 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 11. The release is a CHANGELOG.md entry, a v1.0.0 tag on main after the merge, and a Docker image tagged 1.0.0 built from that commit.
 12. If the .before-restore file already exists, restore fails with an error and changes nothing, so an earlier safety copy is never overwritten.
 13. Any sqlite3 error while copying or verifying is reported as a BackupError whose message includes the path and SQLite's own error text.
+
+### Demo
+
+1. The examples/course folder holds nine dummy Markdown files for a made-up Python basics course. It contains no client names and no real course material.
+2. examples/settings.json lists all five rules, and its content_folder is "course".
+3. Running the checker on it gives exactly 7 findings in 9 files and exit code 1. tests/test_demo.py keeps this true.
+4. The em dash and unreadable file cases are not stored in the repository. The README creates them in a temporary copy.
 
 ### Release 1.1.0 rule
 

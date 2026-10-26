@@ -11,6 +11,7 @@ RUN pip install .
 # Test stage: adds the tests and the dev extra, and runs pytest by default.
 FROM base AS test
 COPY tests ./tests
+COPY examples ./examples
 RUN pip install ".[dev]"
 CMD ["pytest"]
 
