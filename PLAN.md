@@ -138,6 +138,12 @@ The fifth rule is heading_skip. It flags a heading that jumps more than one leve
 
 A 1.0.0 image given a settings file that lists heading_skip exits with code 2 and an unknown rule error. That is correct and goes in the rollback steps.
 
+1. A finding is reported on the line of the heading that jumped, with severity error and a message that names both levels.
+2. The level of a heading is its number of leading # characters. A heading line starts with one or more # characters followed by a space.
+3. Each heading is compared with the heading directly before it, even when that heading was itself flagged.
+4. The rule is registered in RULE_REGISTRY under the name heading_skip, so a settings file can list it. A settings file that does not list it behaves exactly as in 1.0.0.
+5. The fixture for this rule lives in tests/fixtures_heading_skip, so the counts for the existing fixtures folder stay the same.
+
 ## Branches
 
 Each branch gets its own pull request, a green CI run, and a Linear issue moved to Done on merge. Tests are written first, then the code.

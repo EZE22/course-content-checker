@@ -6,7 +6,8 @@ from dataclasses import dataclass
 EM_DASH = "\u2014"
 
 HEADING = re.compile(r"^#{1,6}\s+(.*)$")
-LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+HEADING_LEVEL = re.compile(r"^(#+) ")
+LIST_ITEM =re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
 SEPARATOR = re.compile(r"^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$")
 UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
 
@@ -185,9 +186,33 @@ class TableLeadInRule(Rule):
         return findings
 
 
+class HeadingSkipRule(Rule):
+    """Flags a heading that jumps more than one level deeper than the one before."""
+
+    name = "heading_skip"
+
+    def check(self, text, file_kind):
+        """Return one finding on the line of each heading that skips a level."""
+        lines = text.splitlines()
+        fenced = _fenced_lines(lines)
+        findings = []
+        previous = None
+        for number, line in enumerate(lines, start=1):
+            match = None if number in fenced else HEADING_LEVEL.match(line)
+            if not match:
+                continue
+            level = len(match.group(1))
+            if previous is not None and level > previous + 1:
+                message = f"Heading jumps from level {previous} to level {level}."
+                findings.append(Finding(number, self.name, "error", message))
+            previous = level
+        return findings
+
+
 RULE_REGISTRY = {
     EmDashRule.name: EmDashRule,
     TablePipeRule.name: TablePipeRule,
     MissingSectionRule.name: MissingSectionRule,
     TableLeadInRule.name: TableLeadInRule,
+    HeadingSkipRule.name: HeadingSkipRule,
 }
