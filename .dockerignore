@@ -4,8 +4,8 @@
 .pytest_cache
 .ruff_cache
 **/__pycache__
-*.egg-info
-*.db
+**/*.egg-info
+**/*.db
 .DS_Store
 PLAN.md
 CLAUDE.md

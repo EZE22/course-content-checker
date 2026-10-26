@@ -140,7 +140,11 @@ class MissingSectionRule(Rule):
     def check(self, text, file_kind):
         """Return one finding on line 1 for each missing required section."""
         present = set()
-        for line in text.splitlines():
+        lines = text.splitlines()
+        fenced = _fenced_lines(lines)
+        for number, line in enumerate(lines, start=1):
+            if number in fenced:
+                continue
             match = HEADING.match(line)
             if match:
                 present.add(match.group(1).strip().lower())
