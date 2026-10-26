@@ -6,7 +6,7 @@ This file records the decisions made before any code was written. Every prompt t
 
 ### Finding shape
 
-A finding has five fields: file, line, rule, severity, message.
+A finding has five fields: file, line, rule, severity, message. A rule returns the last four, and the runner adds the file path.
 
 1. Line numbers are 1-based integers.
 2. A finding about the whole file, such as a missing section, reports line 1.
@@ -70,13 +70,13 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 3. Required section names come from the settings file and are passed to the missing section rule when it is created.
 4. A registry maps rule names to classes. The settings loader checks names against it.
 5. Rules never raise on odd input. An empty file or a file with no tables returns an empty list.
-6. The table rules skip fenced code blocks. The em dash rule scans the whole file.
+6. The table rules, missing_section, and heading_skip skip fenced code blocks. The em dash rule scans the whole file.
 
 ### Violation definitions
 
 1. Em dash: the character U+2014 anywhere in the file, including code blocks and tables. One finding per occurrence, on the line where it appears.
 2. Pipe in a table cell: a table is a header row, a separator row, and body rows. A row is flagged when it has more cells than the header row. An escaped pipe is also flagged. One finding per offending row.
-3. Missing section: no heading at any level whose text equals a required section name for that file kind, ignoring case and surrounding spaces. One finding per missing section, on line 1. Bold text does not count as a heading.
+3. Missing section: no heading at any level whose text equals a required section name for that file kind, ignoring case and surrounding spaces. One finding per missing section, on line 1. Bold text does not count as a heading. A heading line starts with one to six # characters followed by whitespace, and a line inside a fenced code block is never a heading.
 4. Table without lead-in: a table whose closest preceding non-blank line is a heading, another table, a list item, or the start of the file.
 
 ### Command line
@@ -102,8 +102,8 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 3. Jobs run on ubuntu-latest with Python 3.12 and install the package with pip install -e ".[dev]".
 4. The versions of pytest and ruff are pinned in pyproject.toml under the dev extra, so local runs and CI use the same tools.
 5. The workflow grants only read access to the repository contents, and each job has a timeout.
-6. The workflow file is validated with actionlint before it is committed.
-7. A pull request is merged only when both jobs are green. The first four branches were merged before CI existed, on local green pytest and ruff.
+6. The workflow file is validated with actionlint before it is committed. This is a manual step run on the Mac, not a CI job.
+7. A pull request is merged only when all jobs are green. The first four branches were merged before CI existed, on local green pytest and ruff.
 
 ### Docker
 
@@ -122,7 +122,7 @@ A run, its files, and its findings are saved in one transaction, or not at all.
 2. content-checker --version prints "content-checker 1.0.0" to stdout and exits 0. The number comes from the installed package metadata.
 3. content-checker backup DESTINATION copies the history database to DESTINATION with sqlite3 Connection.backup. The source is opened read-only, so backup can never create or change the history database. Backup works while no check is running.
 4. The destination must not already exist, and its parent folder is created if needed. Backup never overwrites a file.
-5. After copying, backup runs PRAGMA integrity_check on the copy. The copy is kept only if the result is ok. Otherwise the incomplete copy is removed and the command fails.
+5. Backup copies into a temporary file next to DESTINATION, runs PRAGMA integrity_check on it, and moves it to DESTINATION only if the result is ok. Otherwise the temporary file is removed and the command fails.
 6. content-checker restore BACKUP_FILE replaces the history database from a backup file. The backup is verified first: integrity_check returns ok, user_version is 1, and the runs, files, and findings tables exist.
 7. Restore copies the verified backup to a temporary file next to the history database, verifies that copy, then swaps it into place with os.replace. If a history database already exists, it is first copied aside next to it with the suffix .before-restore.
 8. backup and restore read the database path from CHECKER_DB, with the same rules as check: unset or empty is an error.
@@ -163,6 +163,8 @@ Each branch gets its own pull request, a green CI run, and a Linear issue moved 
 6. feature/docker (FDE-7): the Dockerfile, .dockerignore, read-only content mount, named volume for history, and the docker-build CI job.
 7. feature/release-1-0-0 (FDE-8): CHANGELOG.md, the version in pyproject.toml, tag v1.0.0, Docker image 1.0.0, backup with Connection.backup, and restore.
 8. feature/new-rule (FDE-9): the heading_skip rule, tag v1.1.0, Docker image 1.1.0, and the rollback to 1.0.0.
+9. docs/demo-and-readme (FDE-10): the demo course folder, its test, and the README with real command output.
+10. chore/audit-fixes (FDE-11): the fixes found by auditing this plan against the build.
 
 ## Minimum tests per branch
 
@@ -182,6 +184,15 @@ The following table lists the least each branch must prove before its pull reque
 ## Fixtures
 
 The tests/fixtures folder holds one file per planted violation and one clean file for articles, plus one clean lab. Every rule test reads from it, so the fixtures are the real specification. The em dash fixture is built at run time from the code point U+2014, so no file in the repository contains the character.
+
+## Manual checks
+
+These checks are done by hand and are shown with real output in README.md.
+
+1. The Docker runtime image refuses a write into the read-only content mount, and run history survives in the named volume across containers.
+2. Both release images run against the same volume, no history is lost in either direction, and the 1.0.0 image stops with exit code 2 on a settings file that lists heading_skip.
+3. The v1.0.0 and v1.1.0 images are built from the commits their tags point to.
+4. actionlint is run on the workflow file before it is committed.
 
 ## Risks
 

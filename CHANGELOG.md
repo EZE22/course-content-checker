@@ -2,6 +2,13 @@
 
 All notable changes to the Course Content Checker are recorded in this file, in the Keep a Changelog style.
 
+## [Unreleased]
+
+### Fixed
+
+- A heading inside a fenced code block no longer counts as a required section.
+- The Docker build now leaves out egg-info folders and database files in subfolders as well as at the top level.
+
 ## [1.1.0] - 2026-10-25
 
 ### Added
