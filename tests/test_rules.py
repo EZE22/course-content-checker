@@ -337,16 +337,23 @@ def test_base_rule_check_raises_not_implemented():
         Rule().check("text", "article")
 
 
-def test_registry_has_exactly_the_four_rules():
+def test_registry_has_exactly_the_five_rules():
+    from content_checker.rules import HeadingSkipRule
+
     assert RULE_REGISTRY == {
         "em_dash": EmDashRule,
         "table_pipe": TablePipeRule,
         "missing_section": MissingSectionRule,
         "table_lead_in": TableLeadInRule,
+        "heading_skip": HeadingSkipRule,
     }
 
 
 def test_every_registry_class_name_matches_its_key():
+    from content_checker.rules import HeadingSkipRule
+
+    assert len(RULE_REGISTRY) == 5
+    assert RULE_REGISTRY["heading_skip"] is HeadingSkipRule
     for key, cls in RULE_REGISTRY.items():
         assert cls.name == key
         assert issubclass(cls, Rule)

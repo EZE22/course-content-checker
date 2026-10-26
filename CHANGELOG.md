@@ -2,6 +2,18 @@
 
 All notable changes to the Course Content Checker are recorded in this file, in the Keep a Changelog style.
 
+## [1.1.0] - 2026-10-25
+
+### Added
+
+- The heading_skip rule, which flags a heading that jumps more than one level deeper than the heading before it, and applies to articles and labs.
+
+### Notes
+
+- A settings file that lists heading_skip needs version 1.1.0 or later, because 1.0.0 stops with an unknown rule error and exit code 2.
+- A settings file that does not list heading_skip behaves exactly as in 1.0.0.
+- There is no database schema change, so history is shared between 1.0.0 and 1.1.0.
+
 ## [1.0.0] - 2026-10-25
 
 ### Added
